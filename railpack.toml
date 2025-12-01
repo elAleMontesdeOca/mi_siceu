@@ -1,0 +1,35 @@
+[variables]
+NODE_ENV = "production"
+
+[phases.prepare]
+cmds = [
+    "mkdir -p /usr/local/etc/php/conf.d",
+    "mkdir -p /conf.d/"
+]
+
+[phases.install]
+cmds = [
+    "composer install --no-dev --optimize-autoloader",
+    "npm ci"
+]
+
+[phases.build]
+cmds = [
+    "npm run build",
+    "mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache",
+    "chmod -R a+rw storage",
+    "php artisan config:cache",
+    "php artisan event:cache",
+    "php artisan route:cache",
+    "php artisan view:cache"
+]
+
+# 👇👇 ESTA ES LA PARTE QUE SOLUCIONA TU ERROR
+# Copiar el build de Vite a la imagen final
+
+[[phases.build.artifacts]]
+source = "public/build"
+destination = "/app/public/build"
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
